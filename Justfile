@@ -6,7 +6,7 @@ format:
     cargo fmt --all
 
 lint:
-    cargo clippy --all-targets --all-features --fix --allow-dirty --allow-staged
+    cargo clippy --fix -- -D warnings
 
 build:
     cargo build --all-features

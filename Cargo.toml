@@ -2,10 +2,15 @@
 name = "md-prune-image"
 version = "0.1.0"
 edition = "2024"
+authors = ["kdm1jkm <kdm1jkmm@gmail.com>"]
+description = "A CLI tool to prune unused images in Markdown directory."
+license = "MIT"
+repository = "https://github.com/kdm1jkm/md-prune-image"
 
 [dependencies]
 anyhow = "1.0.100"
 clap = { version = "4.5.51", features = ["derive"] }
+clap-cargo = "0.18.3"
 regex = "1.12.2"
 trash = "5.2.5"
 walkdir = "2.5.0"

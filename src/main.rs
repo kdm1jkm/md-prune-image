@@ -9,6 +9,7 @@ use walkdir::WalkDir;
 #[derive(Parser, Debug)]
 #[command(name = "md-prune-image")]
 #[command(about = "Remove orphaned image files from markdown directories", long_about = None)]
+#[command(styles = clap_cargo::style::CLAP_STYLING)]
 struct Cli {
     /// Target directory to scan
     #[arg(value_name = "DIRECTORY")]
@@ -102,9 +103,7 @@ fn scan_for_orphans(cli: &Cli) -> Result<Vec<PathBuf>> {
             entry
                 .path()
                 .extension()
-                .and_then(|ext| {
-                    Some(image_extensions.contains(&ext.to_string_lossy().to_lowercase()))
-                })
+                .map(|ext| image_extensions.contains(&ext.to_string_lossy().to_lowercase()))
                 .unwrap_or(false)
         })
         .filter_map(|entry| entry.path().canonicalize().ok())
@@ -119,9 +118,7 @@ fn scan_for_orphans(cli: &Cli) -> Result<Vec<PathBuf>> {
             entry
                 .path()
                 .extension()
-                .and_then(|ext| {
-                    Some(ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("markdown"))
-                })
+                .map(|ext| ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("markdown"))
                 .unwrap_or(false)
         })
         .filter_map(|entry| extract_image_references(entry.path(), &cli.directory).ok())
