@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
+use percent_encoding::percent_decode_str;
 use regex::Regex;
 use std::collections::HashSet;
 use std::fs;
@@ -197,6 +198,36 @@ fn extract_image_references(markdown_path: &Path, base_dir: &Path) -> Result<Has
 }
 
 fn resolve_image_path(img_path: &str, markdown_dir: &Path, base_dir: &Path) -> Option<PathBuf> {
+    // 1. Try URL decoding (fallback to original on failure)
+    let decoded_path = percent_decode_str(img_path)
+        .decode_utf8()
+        .map(|s| s.into_owned())
+        .unwrap_or_else(|_| img_path.to_string());
+
+    // 2. Remove fragment (#) and query string (?)
+    let clean_path = decoded_path
+        .split('#')
+        .next()
+        .and_then(|s| s.split('?').next())
+        .unwrap_or(&decoded_path);
+
+    // 3. Try decoded path first
+    try_resolve_path(clean_path, markdown_dir, base_dir).or_else(|| {
+        // 4. Fallback: try original path (filename may already be decoded)
+        if clean_path != img_path {
+            let clean_original = img_path
+                .split('#')
+                .next()
+                .and_then(|s| s.split('?').next())
+                .unwrap_or(img_path);
+            try_resolve_path(clean_original, markdown_dir, base_dir)
+        } else {
+            None
+        }
+    })
+}
+
+fn try_resolve_path(img_path: &str, markdown_dir: &Path, base_dir: &Path) -> Option<PathBuf> {
     // Try to resolve the path relative to the markdown file's directory
     let relative_to_md = markdown_dir.join(img_path);
     if let Ok(canonical) = relative_to_md.canonicalize() {
